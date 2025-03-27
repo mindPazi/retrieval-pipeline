@@ -193,7 +193,7 @@ def compute_token_level(
 
 def compute_char_level(questions_df, results, chunked_corpus, full_text):
     """
-    Calculate and print token-level Precision and Recall
+    Calculate and print char-level Precision and Recall
     """
     # Lists to accumulate precision and recall for each question
     all_precisions = []
