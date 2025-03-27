@@ -11,7 +11,7 @@ from utils import compute_precision_recall
 
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"
 CHUNK_SIZE = 400
-CHUNK_OVERLAP = 125
+CHUNK_OVERLAP = 0
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -97,7 +97,7 @@ def main():
         print(f"Loaded {len(corpus)} documents and {len(questions_df)} questions")
         print(f"'wikitexts.md' contains {len(corpus)} rows.")
         print(f"'questions_df.csv' contains {len(questions_df)} rows.\n")
-        full_text = " ".join(corpus)
+        full_text = "".join(corpus)
 
     except FileNotFoundError as e:
         print(f"Error: {e}")
