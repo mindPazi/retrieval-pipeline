@@ -186,9 +186,9 @@ def compute_token_level(
         all_precisions.append(precision)
         all_recalls.append(recall)
 
-    return sum(all_precisions) / len(all_precisions), sum(all_recalls) / len(
+    return sum(all_precisions) / len(all_precisions) if all_precisions else 0.0, sum(
         all_recalls
-    )
+    ) / len(all_recalls if all_recalls else 0.0)
 
 
 def compute_char_level(questions_df, results, chunked_corpus, full_text):
