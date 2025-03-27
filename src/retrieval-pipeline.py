@@ -2,32 +2,36 @@ import pandas as pd
 import json
 import re
 from sentence_transformers import SentenceTransformer
-from fixed_token_chunker import FixedTokenChunker
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
-from utils import compute_token_level
+from utils import *
 import argparse
 import importlib
 
+LEVEL_FUNCTIONS = {
+    "token": compute_token_level,
+    "char": compute_char_level,
+}
 
-def load_data(corpus_file, question_file):
+
+def load_data(corpus_file, question_file, file_md):
     corpus = []
 
-    questions_df = load_questions_and_normalize(question_file)
+    questions_df = load_questions_and_normalize(question_file, file_md)
     with open(corpus_file, "r", encoding="utf-8") as f:
         corpus = f.readlines()
 
     return corpus, questions_df
 
 
-def load_questions_and_normalize(question_file):
+def load_questions_and_normalize(question_file, file_md):
     try:
         questions_df = pd.read_csv(question_file)
     except FileNotFoundError:
         print(f"File not found: {question_file}")
         return None
 
-    questions_df = questions_df[questions_df["corpus_id"] == "wikitexts"]
+    questions_df = questions_df[questions_df["corpus_id"] == file_md.split(".")[0]]
     questions_df["references"] = questions_df["references"].apply(json.loads)
     questions_df["references"] = questions_df["references"].apply(normalize_references)
 
@@ -91,15 +95,27 @@ def main():
         default="fixed_token_chunker.FixedTokenChunker",
         help="module.ClassName",
     )
+    p.add_argument(
+        "--level",
+        choices=["token", "char"],
+        required=True,
+        help="Livello di valutazione: token o char",
+        default="token",
+    )
     p.add_argument("--chunk_size", type=int, default=400)
     p.add_argument("--chunk_overlap", type=int, default=0)
     p.add_argument("--embed_model", default="all-MiniLM-L6-v2")
     p.add_argument("--k", type=int, default=5)
     args = p.parse_args()
     try:
-        corpus, questions_df = load_data(args.corpus_file, args.question_file)
+        corpus_path, question_path, file_md = (
+            args.corpus_file,
+            args.question_file,
+            args.corpus_file.split("/")[-1],
+        )
+        corpus, questions_df = load_data(corpus_path, question_path, file_md)
         print(f"Loaded {len(corpus)} documents and {len(questions_df)} questions")
-        print(f"'wikitexts.md' contains {len(corpus)} rows.")
+        print(f"{file_md} contains {len(corpus)} rows.")
         print(f"'questions_df.csv' contains {len(questions_df)} rows.\n")
         full_text = "".join(corpus)
 
@@ -128,10 +144,8 @@ def main():
     print(f"Retrieved {len(results)} answers\n")
 
     print("Computing token-level scores...")
-
-    precision, recall = compute_token_level(
-        questions_df, results, chunked_corpus, full_text
-    )
+    func = LEVEL_FUNCTIONS[args.level]
+    precision, recall = func(questions_df, results, chunked_corpus, full_text)
     print(f"Precision: {precision:.4f}")
     print(f"Recall: {recall:.4f}")
 
