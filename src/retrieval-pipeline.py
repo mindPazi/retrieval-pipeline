@@ -127,7 +127,7 @@ def main():
     results = retrieve_top_k_answers(chunk_embeddings, question_embeddings, args.k)
     print(f"Retrieved {len(results)} answers\n")
 
-    print("Computing char-level scores...")
+    print("Computing token-level scores...")
 
     precision, recall = compute_token_level(
         questions_df, results, chunked_corpus, full_text
