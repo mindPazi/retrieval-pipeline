@@ -7,6 +7,8 @@ from fixed_token_chunker import FixedTokenChunker
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 from utils import compute_precision_recall
+import argparse
+import importlib
 
 
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"
@@ -15,11 +17,8 @@ CHUNK_OVERLAP = 0
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
-def load_data():
+def load_data(corpus_file, question_file):
     corpus = []
-
-    corpus_file = os.path.join(BASE_DIR, "data", "corpora", "wikitexts.md")
-    question_file = os.path.join(BASE_DIR, "data", "questions_df.csv")
 
     questions_df = load_questions_and_normalize(question_file)
     with open(corpus_file, "r", encoding="utf-8") as f:
@@ -61,9 +60,8 @@ def clean_unk_tokens(text):
     return cleaned
 
 
-def chunk_text(corpus):
+def chunk_text(chunker, corpus):
     """Split the text into chunks of defined size"""
-    chunker = FixedTokenChunker(chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP)
     chunked_corpus = []
     for doc in corpus:
         chunked_corpus.extend(chunker.split_text(doc))
@@ -92,8 +90,21 @@ def retrieve_top_k_answers(chunk_embeddings, question_embeddings, k=5):
 
 def main():
     print("Loading data...")
+    p = argparse.ArgumentParser()
+    p.add_argument("--corpus_file", required=True)
+    p.add_argument("--question_file", required=True)
+    p.add_argument(
+        "--chunker",
+        default="fixed_token_chunker.FixedTokenChunker",
+        help="module.ClassName",
+    )
+    p.add_argument("--chunk_size", type=int, default=400)
+    p.add_argument("--chunk_overlap", type=int, default=0)
+    p.add_argument("--embed_model", default="all-MiniLM-L6-v2")
+    p.add_argument("--k", type=int, default=5)
+    args = p.parse_args()
     try:
-        corpus, questions_df = load_data()
+        corpus, questions_df = load_data(args.corpus_file, args.question_file)
         print(f"Loaded {len(corpus)} documents and {len(questions_df)} questions")
         print(f"'wikitexts.md' contains {len(corpus)} rows.")
         print(f"'questions_df.csv' contains {len(questions_df)} rows.\n")
@@ -104,7 +115,10 @@ def main():
         return
 
     print("Chunking the text...")
-    chunked_corpus = chunk_text(corpus)
+    module, name = args.chunker.rsplit(".", 1)
+    cls = getattr(importlib.import_module(module), name)
+    chunker = cls(chunk_size=args.chunk_size, chunk_overlap=args.chunk_overlap)
+    chunked_corpus = chunk_text(chunker, corpus)
     print(f"Chunked the text into {len(chunked_corpus)} chunks\n")
 
     print("Generating embeddings...")
@@ -115,11 +129,10 @@ def main():
     )
 
     print("Retrieving answers...")
-    results = retrieve_top_k_answers(chunk_embeddings, question_embeddings, k=5)
+    results = retrieve_top_k_answers(chunk_embeddings, question_embeddings, args.k)
     print(f"Retrieved {len(results)} answers\n")
 
     print("Computing precision score...")
-    compute_precision_recall(questions_df, results, chunked_corpus, full_text)
 
     precision, recall = compute_precision_recall(
         questions_df, results, chunked_corpus, full_text
