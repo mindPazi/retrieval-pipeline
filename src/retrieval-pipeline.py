@@ -6,7 +6,7 @@ from sentence_transformers import SentenceTransformer
 from fixed_token_chunker import FixedTokenChunker
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
-from utils import compute_precision_recall
+from utils import compute_char_level
 import argparse
 import importlib
 
@@ -132,9 +132,9 @@ def main():
     results = retrieve_top_k_answers(chunk_embeddings, question_embeddings, args.k)
     print(f"Retrieved {len(results)} answers\n")
 
-    print("Computing precision score...")
+    print("Computing char-level scores...")
 
-    precision, recall = compute_precision_recall(
+    precision, recall = compute_char_level(
         questions_df, results, chunked_corpus, full_text
     )
     print(f"Precision: {precision:.4f}")

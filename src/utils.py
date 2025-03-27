@@ -112,7 +112,7 @@ def intersect_two_ranges(range1, range2):
         return None
 
 
-def compute_precision_recall(questions_df, results, chunked_corpus, full_text):
+def compute_char_level(questions_df, results, chunked_corpus, full_text):
     """
     Calculate and print token-level Precision and Recall
     """
@@ -136,12 +136,11 @@ def compute_precision_recall(questions_df, results, chunked_corpus, full_text):
         # Build the list of intervals (start, end) for the predicted chunks
         predicted_ranges = []
         for idx in pred_idxs:
-            if idx < len(chunked_corpus):
-                chunk_text = chunked_corpus[idx]
-                match = rigorous_document_search(full_text, chunk_text)
-                if match:
-                    _, start, end = match
-                    predicted_ranges.append((start, end))
+            chunk_text = chunked_corpus[idx]
+            match = rigorous_document_search(full_text, chunk_text)
+            if match:
+                _, start, end = match
+                predicted_ranges.append((start, end))
 
         # Merge any overlapping intervals among the predicted chunks
         predicted_ranges = union_ranges(predicted_ranges)
@@ -155,12 +154,12 @@ def compute_precision_recall(questions_df, results, chunked_corpus, full_text):
                     intersection_ranges.append(intersect)
         intersection_ranges = union_ranges(intersection_ranges)
 
-        # Count the "tokens" (actually characters) in each set
+        # Count the characters in each set
         t_r = sum_of_ranges(predicted_ranges)  # total characters retrieved
         t_e = sum_of_ranges(reference_ranges)  # total characters expected
         t_e_and_t_r = sum_of_ranges(intersection_ranges)  # total correct characters
 
-        # Calculate precision and recall (handle zero-division)
+        # Calculate precision and recall
         precision = t_e_and_t_r / t_r if t_r > 0 else 0
         recall = t_e_and_t_r / t_e if t_e > 0 else 0
 
