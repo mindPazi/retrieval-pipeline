@@ -1,6 +1,7 @@
 import re
 from fuzzywuzzy import fuzz
 from fuzzywuzzy import process
+from transformers import AutoTokenizer
 
 
 def find_query_despite_whitespace(document, query):
@@ -112,7 +113,14 @@ def intersect_two_ranges(range1, range2):
         return None
 
 
-from transformers import AutoTokenizer
+def char_to_token_span(start_char, end_char, offsets):
+    start_token = next(
+        (i for i, (s, e) in enumerate(offsets) if e > start_char), len(offsets)
+    )
+    end_token = next(
+        (i for i, (s, e) in enumerate(offsets) if s >= end_char), len(offsets)
+    )
+    return (start_token, end_token)
 
 
 def compute_token_level(
@@ -127,24 +135,16 @@ def compute_token_level(
     """
 
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_name, use_fast=True)
-    encoding = tokenizer(full_text, return_offsets_mapping=True)
+    tokenizer.model_max_length = 10**6  # just to avoid warnings
+    encoding = tokenizer(full_text, return_offsets_mapping=True, truncation=False)
     offsets = encoding["offset_mapping"]
-
-    def char_to_token_span(start_char, end_char):
-        start_token = next(
-            (i for i, (s, e) in enumerate(offsets) if e > start_char), len(offsets)
-        )
-        end_token = next(
-            (i for i, (s, e) in enumerate(offsets) if s >= end_char), len(offsets)
-        )
-        return (start_token, end_token)
 
     all_precisions, all_recalls = [], []
 
     for i, ref_list in enumerate(questions_df["references"]):
 
         ref_ranges = union_ranges(ref_list)
-        ref_token_ranges = [char_to_token_span(s, e) for s, e in ref_ranges]
+        ref_token_ranges = [char_to_token_span(s, e, offsets) for s, e in ref_ranges]
 
         pred_idxs = results[i]
         pred_token_ranges = []
@@ -152,7 +152,7 @@ def compute_token_level(
             match = rigorous_document_search(full_text, chunked_corpus[idx])
             if match:
                 _, s, e = match
-                pred_token_ranges.append(char_to_token_span(s, e))
+                pred_token_ranges.append(char_to_token_span(s, e, offsets))
         pred_token_ranges = union_ranges(pred_token_ranges)
 
         intersect = union_ranges(
