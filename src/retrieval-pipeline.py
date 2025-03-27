@@ -126,3 +126,7 @@ def main():
     )
     print(f"Precision: {precision:.4f}")
     print(f"Recall: {recall:.4f}")
+
+
+if __name__ == "__main__":
+    main()
