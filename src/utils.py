@@ -118,12 +118,17 @@ def intersect_two_ranges(range1, range2):
 
 
 def char_to_token_span(start_char, end_char, offsets):
-    start_token = next(
-        (i for i, (s, e) in enumerate(offsets) if e > start_char), len(offsets)
-    )
-    end_token = next(
-        (i for i, (s, e) in enumerate(offsets) if s >= end_char), len(offsets)
-    )
+    start_token = len(offsets)
+    for i, (s, e) in enumerate(offsets):
+        if e > start_char:
+            start_token = i
+            break
+
+    end_token = len(offsets)
+    for i, (s, e) in enumerate(offsets):
+        if s >= end_char:
+            end_token = i
+            break
     return (start_token, end_token)
 
 
@@ -148,7 +153,10 @@ def compute_token_level(
     for i, ref_list in enumerate(questions_df["references"]):
 
         ref_ranges = union_ranges(ref_list)
-        ref_token_ranges = [char_to_token_span(s, e, offsets) for s, e in ref_ranges]
+        ref_token_ranges = []
+        for s, e in ref_ranges:
+            token_span = char_to_token_span(s, e, offsets)
+            ref_token_ranges.append(token_span)
 
         pred_idxs = results[i]
         pred_token_ranges = []
@@ -159,14 +167,14 @@ def compute_token_level(
                 pred_token_ranges.append(char_to_token_span(s, e, offsets))
         pred_token_ranges = union_ranges(pred_token_ranges)
 
-        intersect = union_ranges(
-            [
-                intersect_two_ranges(r_ref, r_pred)
-                for r_ref in ref_token_ranges
-                for r_pred in pred_token_ranges
-                if intersect_two_ranges(r_ref, r_pred) is not None
-            ]
-        )
+        intersections = []
+        for r_ref in ref_token_ranges:
+            for r_pred in pred_token_ranges:
+                overlap = intersect_two_ranges(r_ref, r_pred)
+                if overlap is not None:
+                    intersections.append(overlap)
+
+        intersect = union_ranges(intersections)
 
         t_r = sum_of_ranges(pred_token_ranges)
         t_e = sum_of_ranges(ref_token_ranges)
