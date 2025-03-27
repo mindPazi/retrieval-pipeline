@@ -208,9 +208,9 @@ def compute_char_level(questions_df, results, chunked_corpus, full_text):
         predicted_ranges = []
         for idx in pred_idxs:
             chunk_text = chunked_corpus[idx]
-            match = rigorous_document_search(full_text, chunk_text)
-            if match:
-                _, start, end = match
+            match_text = rigorous_document_search(full_text, chunk_text)
+            if match_text:
+                _, start, end = match_text
                 predicted_ranges.append((start, end))
 
         # Merge any overlapping intervals among the predicted chunks
