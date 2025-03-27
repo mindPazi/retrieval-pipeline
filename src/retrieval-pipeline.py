@@ -1,6 +1,9 @@
 import os
 import pandas as pd
 import json
+import re
+from sentence_transformers import SentenceTransformer
+from src.fixed_token_chunker import FixedTokenChunker
 
 
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"
@@ -47,6 +50,30 @@ def normalize_references(refs):
     return normalized
 
 
+def clean_unk_tokens(text):
+    """Remove <unk> and @ tokens from the text"""
+    cleaned = re.sub(r"<unk>", "", text)
+    cleaned = re.sub(r"@", "", cleaned)
+    cleaned = re.sub(r"\s+", " ", cleaned).strip()
+    return cleaned
+
+
+def chunk_text(corpus):
+    """Split the text into chunks of defined size"""
+    chunker = FixedTokenChunker(chunk_size=CHUNK_SIZE, chunk_overlap=CHUNK_OVERLAP)
+    chunked_corpus = []
+    for doc in corpus:
+        chunked_corpus.extend(chunker.split_text(doc))
+    return chunked_corpus
+
+
+def generate_embeddings(texts, model_name=EMBEDDING_MODEL):
+    """Generate embeddings for the given texts using a pre-trained model"""
+    model = SentenceTransformer(model_name)
+    embeddings = model.encode(texts, show_progress_bar=True)
+    return embeddings
+
+
 def main():
     print("Loading data...")
     try:
@@ -58,3 +85,14 @@ def main():
     except FileNotFoundError as e:
         print(f"Error: {e}")
         return
+
+    print("Chunking the text...")
+    chunked_corpus = chunk_text(corpus)
+    print(f"Chunked the text into {len(chunked_corpus)} chunks\n")
+
+    print("Generating embeddings...")
+    chunk_embeddings = generate_embeddings(chunked_corpus)
+    question_embeddings = generate_embeddings(questions_df["question"].tolist())
+    print(
+        f"Generated embeddings for {len(chunk_embeddings)} chunks and {len(question_embeddings)} questions\n"
+    )
