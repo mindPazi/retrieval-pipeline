@@ -4,6 +4,8 @@ import json
 import re
 from sentence_transformers import SentenceTransformer
 from src.fixed_token_chunker import FixedTokenChunker
+from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
 
 
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"
@@ -74,6 +76,19 @@ def generate_embeddings(texts, model_name=EMBEDDING_MODEL):
     return embeddings
 
 
+def retrieve_top_k_answers(chunk_embeddings, question_embeddings, k=5):
+    """
+    For each question, retrieve top-k most similar chunks.
+    Returns a list of lists of indices.
+    """
+    results = []
+    for q_embed in question_embeddings:
+        sims = cosine_similarity([q_embed], chunk_embeddings)[0]
+        top_k_indices = np.argsort(sims)[::-1][:k]
+        results.append(top_k_indices)
+    return results
+
+
 def main():
     print("Loading data...")
     try:
@@ -96,3 +111,7 @@ def main():
     print(
         f"Generated embeddings for {len(chunk_embeddings)} chunks and {len(question_embeddings)} questions\n"
     )
+
+    print("Retrieving answers...")
+    results = retrieve_top_k_answers(chunk_embeddings, question_embeddings, k=5)
+    print(f"Retrieved {len(results)} answers\n")
