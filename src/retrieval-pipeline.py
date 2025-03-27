@@ -21,6 +21,8 @@ def load_data(corpus_file, question_file, file_md):
     with open(corpus_file, "r", encoding="utf-8") as f:
         corpus = f.readlines()
 
+    # corpus = [clean_unk_tokens(doc) for doc in corpus]
+
     return corpus, questions_df
 
 
