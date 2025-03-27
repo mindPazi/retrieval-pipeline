@@ -11,10 +11,14 @@ def find_query_despite_whitespace(document, query):
     pattern = r"\s*".join(re.escape(word) for word in normalized_query.split())
 
     regex = re.compile(pattern, re.IGNORECASE)
-    match = regex.search(document)
+    match_text = regex.search(document)
 
-    if match:
-        return document[match.start() : match.end()], match.start(), match.end()
+    if match_text:
+        return (
+            document[match_text.start() : match_text.end()],
+            match_text.start(),
+            match_text.end(),
+        )
     else:
         return None
 
@@ -149,9 +153,9 @@ def compute_token_level(
         pred_idxs = results[i]
         pred_token_ranges = []
         for idx in pred_idxs:
-            match = rigorous_document_search(full_text, chunked_corpus[idx])
-            if match:
-                _, s, e = match
+            match_text = rigorous_document_search(full_text, chunked_corpus[idx])
+            if match_text:
+                _, s, e = match_text
                 pred_token_ranges.append(char_to_token_span(s, e, offsets))
         pred_token_ranges = union_ranges(pred_token_ranges)
 
