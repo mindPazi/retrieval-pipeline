@@ -3,7 +3,7 @@ import pandas as pd
 import json
 import re
 from sentence_transformers import SentenceTransformer
-from src.fixed_token_chunker import FixedTokenChunker
+from fixed_token_chunker import FixedTokenChunker
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 from utils import compute_precision_recall
