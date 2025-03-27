@@ -6,6 +6,7 @@ from sentence_transformers import SentenceTransformer
 from src.fixed_token_chunker import FixedTokenChunker
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
+from utils import compute_precision_recall
 
 
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"
@@ -96,6 +97,7 @@ def main():
         print(f"Loaded {len(corpus)} documents and {len(questions_df)} questions")
         print(f"'wikitexts.md' contains {len(corpus)} rows.")
         print(f"'questions_df.csv' contains {len(questions_df)} rows.\n")
+        full_text = " ".join(corpus)
 
     except FileNotFoundError as e:
         print(f"Error: {e}")
@@ -115,3 +117,12 @@ def main():
     print("Retrieving answers...")
     results = retrieve_top_k_answers(chunk_embeddings, question_embeddings, k=5)
     print(f"Retrieved {len(results)} answers\n")
+
+    print("Computing precision score...")
+    compute_precision_recall(questions_df, results, chunked_corpus, full_text)
+
+    precision, recall = compute_precision_recall(
+        questions_df, results, chunked_corpus, full_text
+    )
+    print(f"Precision: {precision:.4f}")
+    print(f"Recall: {recall:.4f}")
