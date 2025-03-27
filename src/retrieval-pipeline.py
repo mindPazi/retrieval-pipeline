@@ -1,4 +1,3 @@
-import os
 import pandas as pd
 import json
 import re
@@ -6,15 +5,9 @@ from sentence_transformers import SentenceTransformer
 from fixed_token_chunker import FixedTokenChunker
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
-from utils import compute_char_level
+from utils import compute_token_level
 import argparse
 import importlib
-
-
-EMBEDDING_MODEL = "all-MiniLM-L6-v2"
-CHUNK_SIZE = 400
-CHUNK_OVERLAP = 0
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def load_data(corpus_file, question_file):
@@ -68,7 +61,7 @@ def chunk_text(chunker, corpus):
     return chunked_corpus
 
 
-def generate_embeddings(texts, model_name=EMBEDDING_MODEL):
+def generate_embeddings(texts, model_name):
     """Generate embeddings for the given texts using a pre-trained model"""
     model = SentenceTransformer(model_name)
     embeddings = model.encode(texts, show_progress_bar=True)
@@ -122,8 +115,10 @@ def main():
     print(f"Chunked the text into {len(chunked_corpus)} chunks\n")
 
     print("Generating embeddings...")
-    chunk_embeddings = generate_embeddings(chunked_corpus)
-    question_embeddings = generate_embeddings(questions_df["question"].tolist())
+    chunk_embeddings = generate_embeddings(chunked_corpus, args.embed_model)
+    question_embeddings = generate_embeddings(
+        questions_df["question"].tolist(), args.embed_model
+    )
     print(
         f"Generated embeddings for {len(chunk_embeddings)} chunks and {len(question_embeddings)} questions\n"
     )
@@ -134,7 +129,7 @@ def main():
 
     print("Computing char-level scores...")
 
-    precision, recall = compute_char_level(
+    precision, recall = compute_token_level(
         questions_df, results, chunked_corpus, full_text
     )
     print(f"Precision: {precision:.4f}")
