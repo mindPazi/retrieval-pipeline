@@ -21,7 +21,7 @@ def load_data(corpus_file, question_file, file_md):
     with open(corpus_file, "r", encoding="utf-8") as f:
         corpus = f.readlines()
 
-    # corpus = [clean_unk_tokens(doc) for doc in corpus]
+    corpus = [clean_unk_tokens(doc) for doc in corpus]
 
     return corpus, questions_df
 
@@ -52,11 +52,11 @@ def normalize_references(refs):
 
 
 def clean_unk_tokens(text):
-    """Remove <unk> and @ tokens from the text"""
-    cleaned = re.sub(r"<unk>", "", text)
-    cleaned = re.sub(r"@", "", cleaned)
-    cleaned = re.sub(r"\s+", " ", cleaned).strip()
-    return cleaned
+    # Replace <unk> with 5 spaces (preserves the original length)
+    text = text.replace("<unk>", " " * 5)
+    # Replace @ with 1 space
+    text = text.replace("@", " ")
+    return text
 
 
 def chunk_text(chunker, corpus):
@@ -90,8 +90,8 @@ def retrieve_top_k_answers(chunk_embeddings, question_embeddings, k=5):
 def main():
     print("Loading data...")
     p = argparse.ArgumentParser()
-    p.add_argument("--corpus_file", required=True)
-    p.add_argument("--question_file", required=True)
+    p.add_argument("--corpus_file", default="../data/corpora/wikitexts.md")
+    p.add_argument("--question_file", default="../data/questions_df.csv")
     p.add_argument(
         "--chunker",
         default="fixed_token_chunker.FixedTokenChunker",
@@ -100,7 +100,6 @@ def main():
     p.add_argument(
         "--level",
         choices=["token", "char"],
-        required=True,
         help="Livello di valutazione: token o char",
         default="token",
     )
