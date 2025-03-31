@@ -274,7 +274,7 @@ def parsf():
     )
     p.add_argument("--chunk_size", type=int, default=400)
     p.add_argument("--chunk_overlap", type=int, default=0)
-    p.add_argument("--embed_model", default="all-MiniLM-L6-v2")
+    p.add_argument("--embed_model", default="multi-qa-mpnet-base-dot-v1")
     p.add_argument("--k", type=int, default=5)
     args = p.parse_args()
     return args
