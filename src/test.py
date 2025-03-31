@@ -1,5 +1,5 @@
 from retrieval_pipeline import Pipeline
-from utils import compute_token_level, compute_char_level, parsef
+from utils import compute_token_level, compute_char_level, parsf
 import importlib
 
 LEVEL_FUNCTIONS = {
@@ -9,7 +9,7 @@ LEVEL_FUNCTIONS = {
 
 
 def main():
-    args = parsef()
+    args = parsf()
     try:
         file_md = args.corpus_file.split("/")[-1]
         chunker = getattr(
