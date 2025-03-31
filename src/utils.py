@@ -2,6 +2,7 @@ import re
 from fuzzywuzzy import fuzz
 from fuzzywuzzy import process
 from transformers import AutoTokenizer
+import argparse
 
 
 def find_query_despite_whitespace(document, query):
@@ -142,6 +143,7 @@ def compute_token_level(
     """
     Calculate token-level Precision e Recall invece di char-level.
     """
+    print("Computing token-level scores...")
 
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_name, use_fast=True)
     tokenizer.model_max_length = 10**6  # just to avoid warnings
@@ -195,6 +197,7 @@ def compute_char_level(questions_df, results, chunked_corpus, full_text):
     """
     Calculate and print char-level Precision and Recall
     """
+    print("Computing char-level scores...")
     # Lists to accumulate precision and recall for each question
     all_precisions = []
     all_recalls = []
@@ -252,3 +255,26 @@ def compute_char_level(questions_df, results, chunked_corpus, full_text):
 
     # Return the aggregated metrics
     return avg_precision, avg_recall
+
+
+def parsf():
+    p = argparse.ArgumentParser()
+    p.add_argument("--corpus_file", default="../data/corpora/wikitexts.md")
+    p.add_argument("--question_file", default="../data/questions_df.csv")
+    p.add_argument(
+        "--chunker",
+        default="fixed_token_chunker.FixedTokenChunker",
+        help="module.ClassName",
+    )
+    p.add_argument(
+        "--level",
+        choices=["token", "char"],
+        help="Livello di valutazione: token o char",
+        default="token",
+    )
+    p.add_argument("--chunk_size", type=int, default=400)
+    p.add_argument("--chunk_overlap", type=int, default=0)
+    p.add_argument("--embed_model", default="all-MiniLM-L6-v2")
+    p.add_argument("--k", type=int, default=5)
+    args = p.parse_args()
+    return args

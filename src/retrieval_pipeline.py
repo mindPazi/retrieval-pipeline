@@ -31,6 +31,7 @@ class Pipeline:
         self.k = k
 
     def load_data(self, file_md):
+        print("Loading data...")
         corpus = []
 
         questions_df = self.load_questions_and_normalize(self.question_file, file_md)
@@ -38,6 +39,10 @@ class Pipeline:
             corpus = f.readlines()
 
         corpus = [self.clean_unk_tokens(doc) for doc in corpus]
+
+        print(f"Loaded {len(corpus)} documents and {len(questions_df)} questions")
+        print(f"{file_md} contains {len(corpus)} rows.")
+        print(f"'questions_df.csv' contains {len(questions_df)} rows.\n")
 
         return corpus, questions_df
 
@@ -74,15 +79,20 @@ class Pipeline:
 
     def chunk_text(self, corpus):
         """Split the text into chunks of defined size"""
+        print("Chunking the text...")
         chunked_corpus = []
         for doc in corpus:
             chunked_corpus.extend(self.chunker.split_text(doc))
+
+        print(f"Chunked the text into {len(chunked_corpus)} chunks\n")
         return chunked_corpus
 
     def generate_embeddings(self, texts):
         """Generate embeddings for the given texts using a pre-trained model"""
+        print("Generating embeddings...")
         model = SentenceTransformer(self.embed_model)
         embeddings = model.encode(texts, show_progress_bar=True)
+
         return embeddings
 
     def retrieve_top_k_answers(self, chunk_embeddings, question_embeddings):
@@ -90,9 +100,12 @@ class Pipeline:
         For each question, retrieve top-k most similar chunks.
         Returns a list of lists of indices.
         """
+        print("Retrieving answers...")
         results = []
         for q_embed in question_embeddings:
             sims = cosine_similarity([q_embed], chunk_embeddings)[0]
             top_k_indices = np.argsort(sims)[::-1][: self.k]
             results.append(top_k_indices)
+
+        print(f"Retrieved {len(results)} answers\n")
         return results
