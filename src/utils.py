@@ -120,16 +120,23 @@ def intersect_two_ranges(range1, range2):
 
 def char_to_token_span(start_char, end_char, offsets):
     start_token = len(offsets)
+    # Iterate through each token offset pair
     for i, (s, e) in enumerate(offsets):
+        # If the end position of the token is after the start character
         if e > start_char:
+            # This is the first token that contains our start character
             start_token = i
             break
 
     end_token = len(offsets)
+    # Iterate through each token offset pair
     for i, (s, e) in enumerate(offsets):
+        # If the start position of the token is at or after the end character
         if s >= end_char:
+            # This is the first token after our span
             end_token = i
             break
+    # Return the token span as a tuple
     return (start_token, end_token)
 
 
@@ -146,36 +153,53 @@ def compute_token_level(
     print("Computing token-level scores...")
 
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_name, use_fast=True)
-    tokenizer.model_max_length = 10**6  # just to avoid warnings
+    # Set a high maximum length to avoid truncation
+    tokenizer.model_max_length = 10**6
+    # Tokenize the full text and get the character offsets for each token
     encoding = tokenizer(full_text, return_offsets_mapping=True, truncation=False)
+    # Extract the offset mappings
     offsets = encoding["offset_mapping"]
 
     all_precisions, all_recalls = [], []
 
+    # Iterate through each question's reference spans
     for i, ref_list in enumerate(questions_df["references"]):
 
+        # Merge overlapping reference character ranges
         ref_ranges = union_ranges(ref_list)
+        # Initialize list to store token-level ranges
         ref_token_ranges = []
+        # Convert each character range to token range
         for s, e in ref_ranges:
             token_span = char_to_token_span(s, e, offsets)
             ref_token_ranges.append(token_span)
 
+        # Get the predicted chunk indices for this question
         pred_idxs = results[i]
+        # Initialize list to store predicted token ranges
         pred_token_ranges = []
+        # For each predicted chunk
         for idx in pred_idxs:
+            # Find the exact location of the chunk in the full text
             match_text = rigorous_document_search(full_text, chunked_corpus[idx])
             if match_text:
+                # Extract start and end character positions
                 _, s, e = match_text
+                # Convert to token positions and add to predictions
                 pred_token_ranges.append(char_to_token_span(s, e, offsets))
+        # Merge overlapping predicted token ranges
         pred_token_ranges = union_ranges(pred_token_ranges)
 
+        # Initialize list to store intersections between reference and prediction
         intersections = []
+        # Find all intersections between reference and predicted ranges
         for r_ref in ref_token_ranges:
             for r_pred in pred_token_ranges:
                 overlap = intersect_two_ranges(r_ref, r_pred)
                 if overlap is not None:
                     intersections.append(overlap)
 
+        # Merge overlapping intersection ranges
         intersect = union_ranges(intersections)
 
         t_r = sum_of_ranges(pred_token_ranges)
@@ -198,62 +222,62 @@ def compute_char_level(questions_df, results, chunked_corpus, full_text):
     Calculate and print char-level Precision and Recall
     """
     print("Computing char-level scores...")
-    # Lists to accumulate precision and recall for each question
+
     all_precisions = []
     all_recalls = []
 
-    # Iterate over all questions (one row for each list of reference spans)
+    # Iterate through each question
     for i in range(len(questions_df["references"])):
 
-        # Extract the reference spans (list of (start, end)) for question i
+        # Get the reference spans for this question
         reference_spans = questions_df["references"].iloc[i]
-        # Merge any overlapping intervals in the references
+
+        # Merge overlapping reference ranges
         reference_ranges = union_ranges(reference_spans)
 
-        # Get the indices of the predicted chunks for the same question
-        pred_idxs = results[
-            i
-        ]  # we can do this because the length of results and question_df is the same
+        # Get the predicted chunk indices for this question
+        pred_idxs = results[i]
 
-        # Build the list of intervals (start, end) for the predicted chunks
+        # Initialize list to store predicted character ranges
         predicted_ranges = []
+        # For each predicted chunk
         for idx in pred_idxs:
+            # Get the chunk text
             chunk_text = chunked_corpus[idx]
+            # Find the exact location of the chunk in the full text
             match_text = rigorous_document_search(full_text, chunk_text)
             if match_text:
+                # Extract start and end character positions
                 _, start, end = match_text
                 predicted_ranges.append((start, end))
 
-        # Merge any overlapping intervals among the predicted chunks
+        # Merge overlapping predicted ranges
         predicted_ranges = union_ranges(predicted_ranges)
 
-        # Calculate the intersection between reference_ranges and predicted_ranges
+        # Initialize list to store intersections
         intersection_ranges = []
+        # Find all intersections between reference and predicted ranges
         for r_ref in reference_ranges:
             for r_pred in predicted_ranges:
                 intersect = intersect_two_ranges(r_ref, r_pred)
                 if intersect:
                     intersection_ranges.append(intersect)
+
         intersection_ranges = union_ranges(intersection_ranges)
 
-        # Count the characters in each set
-        t_r = sum_of_ranges(predicted_ranges)  # total characters retrieved
-        t_e = sum_of_ranges(reference_ranges)  # total characters expected
-        t_e_and_t_r = sum_of_ranges(intersection_ranges)  # total correct characters
+        t_r = sum_of_ranges(predicted_ranges)
+        t_e = sum_of_ranges(reference_ranges)
+        t_e_and_t_r = sum_of_ranges(intersection_ranges)
 
-        # Calculate precision and recall
         precision = t_e_and_t_r / t_r if t_r > 0 else 0
         recall = t_e_and_t_r / t_e if t_e > 0 else 0
 
-        # Add the metrics to the lists
         all_precisions.append(precision)
         all_recalls.append(recall)
 
-    # Calculate averages across all questions
     avg_precision = sum(all_precisions) / len(all_precisions) if all_precisions else 0
     avg_recall = sum(all_recalls) / len(all_recalls) if all_recalls else 0
 
-    # Return the aggregated metrics
     return avg_precision, avg_recall
 
 
