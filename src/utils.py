@@ -293,7 +293,7 @@ def parsf():
     p.add_argument(
         "--level",
         choices=["token", "char"],
-        help="Livello di valutazione: token o char",
+        help="Evaluation level: token or char",
         default="token",
     )
     p.add_argument("--chunk_size", type=int, default=400)
