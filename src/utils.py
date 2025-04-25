@@ -283,7 +283,7 @@ def compute_char_level(questions_df, results, chunked_corpus, full_text):
 
 def parsf():
     p = argparse.ArgumentParser()
-    p.add_argument("--corpus_file", default="../data/corpora/wikitexts.md")
+    p.add_argument("--corpus_file", default="../data/corpora/pubmed.md")
     p.add_argument("--question_file", default="../data/questions_df.csv")
     p.add_argument(
         "--chunker",
