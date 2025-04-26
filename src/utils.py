@@ -148,7 +148,7 @@ def compute_token_level(
     tokenizer_name="distilbert-base-uncased",
 ):
     """
-    Calculate token-level Precision e Recall invece di char-level.
+    Calculate token-level Precision e Recall instead di char-level.
     """
     print("Computing token-level scores...")
 
