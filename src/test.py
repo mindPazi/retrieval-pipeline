@@ -55,9 +55,9 @@ def main():
         enhanced_questions = [enhance_query_with_tech_terms(q) for q in questions]
 
         # Print some examples of enhanced queries for debugging
-        print("\n=== First 5 Modified Queries ===")
+        print("\n=== First 20 Modified Queries ===")
         for i, (orig, enhanced) in enumerate(zip(questions, enhanced_questions)):
-            if i >= 5:
+            if i >= 20:
                 break
             print(f"Query {i+1}:")
             print(f"  Original: {orig}")

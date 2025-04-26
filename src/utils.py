@@ -148,7 +148,7 @@ def compute_token_level(
     tokenizer_name="distilbert-base-uncased",
 ):
     """
-    Calculate token-level Precision e Recall instead di char-level.
+    Calculate token-level Precision and Recall instead of char-level.
     """
     print("Computing token-level scores...")
 
@@ -295,7 +295,6 @@ def enhance_query_with_tech_terms(query):
         for path in possible_paths:
             try:
                 with open(path, "r", encoding="utf-8") as f:
-                    print(f"Successfully found and opened: {path}")
                     for line in f:
                         term = line.strip()
                         if term:
@@ -313,10 +312,6 @@ def enhance_query_with_tech_terms(query):
     except FileNotFoundError:
         print("Warning: filtered_tech_terms.txt not found. Query will not be enhanced.")
         return query
-
-    print(f"Loaded {len(tech_terms_set)} technical terms from filtered_tech_terms.txt")
-
-    words = query.lower().split()
 
     matching_terms = set()
     for term in tech_terms_set:
