@@ -3,7 +3,6 @@ from utils import (
     compute_token_level,
     compute_char_level,
     parsf,
-    enhance_query_with_tech_terms,
 )
 import importlib
 
@@ -41,33 +40,9 @@ def main():
 
     chunked_corpus = pipeline.chunk_text(corpus)
 
-    # Check if embed_queries method exists, otherwise use generate_embeddings
     questions = questions_df["question"].tolist()
 
-    try:
-        # Try using embed_queries method if it exists
-        question_embeddings = pipeline.embed_queries(questions)
-    except AttributeError:
-        # If it doesn't exist, enhance queries manually and then generate embeddings
-        print(
-            "Method 'embed_queries' not found. Using enhance_query_with_tech_terms and generate_embeddings instead."
-        )
-        enhanced_questions = [enhance_query_with_tech_terms(q) for q in questions]
-
-        # Print some examples of enhanced queries for debugging
-        print("\n=== First 20 Modified Queries ===")
-        for i, (orig, enhanced) in enumerate(zip(questions, enhanced_questions)):
-            if i >= 20:
-                break
-            print(f"Query {i+1}:")
-            print(f"  Original: {orig}")
-            print(f"  Modified: {enhanced}")
-            print(
-                f"  Added terms: {enhanced[len(orig):] if enhanced != orig else 'None'}"
-            )
-            print("-" * 50)
-
-        question_embeddings = pipeline.generate_embeddings(enhanced_questions)
+    question_embeddings = pipeline.embed_queries(questions)
 
     chunk_embeddings = pipeline.generate_embeddings(chunked_corpus)
     print(

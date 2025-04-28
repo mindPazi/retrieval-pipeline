@@ -68,9 +68,9 @@ class Pipeline:
         return normalized
 
     def clean_unk_tokens(self, text):
-        # Replace <unk> with 5 spaces (preserves the original length)
+
         text = text.replace("<unk>", " " * 5)
-        # Replace @ with 1 space
+
         text = text.replace("@", " ")
         return text
 
@@ -99,7 +99,6 @@ class Pipeline:
         print("Enhancing queries with technical terms...")
         enhanced_questions = [enhance_query_with_tech_terms(q) for q in questions]
 
-        # Print the first 10 modified queries
         print("\n=== PRIME 10 QUERY MODIFICATE ===")
         for i, (orig, enhanced) in enumerate(zip(questions, enhanced_questions)):
             if i >= 10:
@@ -113,7 +112,6 @@ class Pipeline:
             print("-" * 50)
         print("=== FINE PRIME 10 QUERY ===\n")
 
-        # Print original and enhanced queries for debugging (only changed ones)
         modified_count = 0
         for i, (orig, enhanced) in enumerate(zip(questions, enhanced_questions)):
             if orig != enhanced:
@@ -121,7 +119,6 @@ class Pipeline:
 
         print(f"Totale query modificate: {modified_count} su {len(questions)}")
 
-        # Generate embeddings for the enhanced queries
         return self.generate_embeddings(enhanced_questions)
 
     def retrieve_top_k_answers(self, chunk_embeddings, question_embeddings):
