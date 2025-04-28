@@ -158,7 +158,7 @@ def compute_token_level(
 
     encoding = tokenizer(full_text, return_offsets_mapping=True, truncation=False)
 
-    offsets = encoding["offset_mapping"]
+    offsets = encoding["offset_mapping"]  # [(0, 4), (5,10)...] tokens
 
     all_precisions, all_recalls = [], []
 
@@ -169,7 +169,9 @@ def compute_token_level(
         ref_token_ranges = []
 
         for s, e in ref_ranges:
-            token_span = char_to_token_span(s, e, offsets)
+            token_span = char_to_token_span(
+                s, e, offsets
+            )  # there is a char_to_token function from HuggingFace
             ref_token_ranges.append(token_span)
 
         pred_idxs = results[i]
