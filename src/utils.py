@@ -180,7 +180,9 @@ def compute_token_level(
 
         for idx in pred_idxs:
 
-            match_text = rigorous_document_search(full_text, chunked_corpus[idx])
+            match_text = rigorous_document_search(
+                full_text, chunked_corpus[idx]
+            )  # used because we performed a cleaning of the corpus
             if match_text:
 
                 _, s, e = match_text
