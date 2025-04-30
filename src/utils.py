@@ -286,32 +286,13 @@ def enhance_query_with_tech_terms(query):
     """
 
     tech_terms_set = set()
+    path = "C:/Users/Andrea/Desktop/retrieval-pipeline/filtered_tech_terms.txt"
     try:
-
-        possible_paths = [
-            "filtered_tech_terms.txt",
-            "./filtered_tech_terms.txt",
-            "../filtered_tech_terms.txt",
-            "C:/Users/Andrea/Desktop/retrieval-pipeline/filtered_tech_terms.txt",
-        ]
-
-        file_found = False
-        for path in possible_paths:
-            try:
-                with open(path, "r", encoding="utf-8") as f:
-                    for line in f:
-                        term = line.strip()
-                        if term:
-                            tech_terms_set.add(term)
-                    file_found = True
-                    break
-            except FileNotFoundError:
-                continue
-
-        if not file_found:
-            raise FileNotFoundError(
-                "Could not find filtered_tech_terms.txt in any expected location"
-            )
+        with open(path, "r", encoding="utf-8") as f:
+            for line in f:
+                term = line.strip()
+                if term:
+                    tech_terms_set.add(term)
 
     except FileNotFoundError:
         print("Warning: filtered_tech_terms.txt not found. Query will not be enhanced.")
