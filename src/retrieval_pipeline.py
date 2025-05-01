@@ -99,25 +99,25 @@ class Pipeline:
         print("Enhancing queries with technical terms...")
         enhanced_questions = [enhance_query_with_tech_terms(q) for q in questions]
 
-        print("\n=== PRIME 10 QUERY MODIFICATE ===")
+        print("\n=== FIRST 10 MODIFIED QUERIES ===")
         for i, (orig, enhanced) in enumerate(zip(questions, enhanced_questions)):
             if i >= 10:
                 break
             print(f"Query {i+1}:")
-            print(f"  Originale: {orig}")
-            print(f"  Modificata: {enhanced}")
+            print(f"  Original: {orig}")
+            print(f"  Modified: {enhanced}")
             print(
-                f"  Termini aggiunti: {enhanced[len(orig):] if enhanced != orig else 'Nessuno'}"
+                f"  Added terms: {enhanced[len(orig):] if enhanced != orig else 'None'}"
             )
             print("-" * 50)
-        print("=== FINE PRIME 10 QUERY ===\n")
+        print("=== END OF FIRST 10 QUERIES ===\n")
 
         modified_count = 0
         for i, (orig, enhanced) in enumerate(zip(questions, enhanced_questions)):
             if orig != enhanced:
                 modified_count += 1
 
-        print(f"Totale query modificate: {modified_count} su {len(questions)}")
+        print(f"Total modified queries: {modified_count} out of {len(questions)}")
 
         return self.generate_embeddings(enhanced_questions)
 
